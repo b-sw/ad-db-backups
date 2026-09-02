@@ -21,13 +21,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Validate Input Password
+      - name: Validate Restore Confirmation
+        env:
+          RESTORE_CONFIRMATION: ${{ inputs.confirmation_password }}
         run: |
-          if [ "${{ github.event.inputs.confirmation_password }}" != "RESTORE_CONFIRMED" ]; then
-            echo "❌ Invalid confirmation password. Please type 'RESTORE_CONFIRMED' to proceed."
+          set -euo pipefail
+
+          if [[ "$RESTORE_CONFIRMATION" != "RESTORE_CONFIRMED" ]]; then
+            echo "❌ Invalid confirmation. Please type 'RESTORE_CONFIRMED' to proceed."
             exit 1
           fi
-          echo "✅ Confirmation password validated"
+          echo "✅ Restore confirmation validated"
         shell: bash
 
       - name: Checkout
