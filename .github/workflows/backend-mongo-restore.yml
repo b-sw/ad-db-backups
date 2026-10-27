@@ -39,9 +39,22 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          # Install MongoDB tools for mongorestore
-          wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | sudo apt-key add -
-          echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+          # Ubuntu 26.04 removed apt-key. Trust the MongoDB key for this repo only,
+          # and select the suite that matches the runner (noble during the
+          # ubuntu-latest migration, resolute once it finishes).
+          sudo install -d -m 0755 /usr/share/keyrings
+          curl -fsSL https://pgp.mongodb.com/server-9.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/mongodb-server-9.gpg
+
+          . /etc/os-release
+          case "$VERSION_CODENAME" in
+            jammy|noble|resolute) ;;
+            *)
+              echo "Unsupported Ubuntu release: ${VERSION_CODENAME}"
+              exit 1
+              ;;
+          esac
+
+          echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-9.gpg ] https://repo.mongodb.org/apt/ubuntu ${VERSION_CODENAME}/mongodb-org/9.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-9.0.list
           sudo apt-get update
           sudo apt-get install -y mongodb-database-tools mongodb-mongosh age
         shell: bash
